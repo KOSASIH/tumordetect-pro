@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TumorDetect Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border: none;
+        }
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        #result-section {
+            display: none;
+        }
+        #visualization {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .progress {
+            height: 25px;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            line-height: 25px;
+            font-weight: bold;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #0d6efd;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <h1><strong>TumorDetect Pro</strong></h1>
+        <p class="lead">Advanced Brain MRI Tumor Classification System</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Upload MRI Scan
+                    </div>
+                    <div class="card-body">
+                        <form id="upload-form">
+                            <div class="mb-3">
+                                <label for="file-upload" class="form-label">Select MRI Image (JPG, PNG)</label>
+                                <input class="form-control" type="file" id="file-upload" accept=".jpg,.jpeg,.png">
+                            </div>
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary w-100">Analyze Image</button>
+                            </div>
+                        </form>
+                        <div class="loader" id="loader"></div>
+                        <div class="text-center">
+                            <img id="preview-image" class="img-fluid mt-3" style="max-height: 300px; display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6" id="result-section">
+                <div class="card">
+                    <div class="card-header">
+                        Analysis Results
+                    </div>
+                    <div class="card-body">
+                        <div class="alert" id="result-alert" role="alert"></div>
+                        <h5>Diagnosis:</h5>
+                        <p id="diagnosis" class="fw-bold fs-4"></p>
+                        <h5>Confidence:</h5>
+                        <p id="confidence" class="fw-bold"></p>
+                        <h5>Probability Distribution:</h5>
+                        <div id="probabilities"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card" id="visualization-card" style="display: none;">
+                    <div class="card-header">
+                        Visualization
+                    </div>
+                    <div class="card-body text-center">
+                        <img id="visualization" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        About TumorDetect Pro
+                    </div>
+                    <div class="card-body">
+                        <p>TumorDetect Pro is an advanced diagnostic tool that utilizes a sophisticated Convolutional Neural Network (CNN) model to classify brain MRI images into distinct tumor categories:</p>
+                        <ul>
+                            <li><strong>No Tumor</strong> - Normal brain tissue without abnormal growth</li>
+                            <li><strong>Glioma</strong> - Tumors that originate in the glial cells of the brain</li>
+                            <li><strong>Meningioma</strong> - Tumors that arise from the meninges (the membranes that surround the brain and spinal cord)</li>
+                            <li><strong>Pituitary</strong> - Tumors that develop in the pituitary gland</li>
+                        </ul>
+                        <p>This tool is designed to assist neurologists and radiologists in the diagnostic process by providing intuitive visualizations and detailed classification reports.</p>
+                        <p class="text-muted"><small>Disclaimer: This tool is for educational and research purposes only. It should not be used as the sole basis for medical diagnosis. Always consult with qualified healthcare professionals.</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p>© 2025 TumorDetect Pro - Advanced Brain MRI Analysis Tool</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadForm = document.getElementById('upload-form');
+            const fileUpload = document.getElementById('file-upload');
+            const previewImage = document.getElementById('preview-image');
+            const resultSection = document.getElementById('result-section');
+            const resultAlert = document.getElementById('result-alert');
+            const diagnosis = document.getElementById('diagnosis');
+            const confidence = document.getElementById('confidence');
+            const probabilities = document.getElementById('probabilities');
+            const visualization = document.getElementById('visualization');
+            const visualizationCard = document.getElementById('visualization-card');
+            const loader = document.getElementById('loader');
+
+            // Preview image when selected
+            fileUpload.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewImage.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Handle form submission
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const file = fileUpload.files[0];
+                if (!file) {
+                    alert('Please select an image file');
+                    return;
+                }
+
+                // Show loader
+                loader.style.display = 'block';
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Send request to server
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loader
+                    loader.style.display = 'none';
+                    
+                    if (data.error) {
+                        resultAlert.className = 'alert alert-danger';
+                        resultAlert.textContent = data.error;
+                        return;
+                    }
+
+                    // Display results
+                    resultSection.style.display = 'block';
+                    
+                    // Set diagnosis and confidence
+                    diagnosis.textContent = data.class;
+                    confidence.textContent = `${(data.confidence * 100).toFixed(2)}%`;
+                    
+                    // Set alert color based on diagnosis
+                    if (data.class === 'No Tumor') {
+                        resultAlert.className = 'alert alert-success';
+                        resultAlert.textContent = 'No tumor detected in the MRI scan.';
+                    } else {
+                        resultAlert.className = 'alert alert-warning';
+                        resultAlert.textContent = `${data.class} tumor detected with ${(data.confidence * 100).toFixed(2)}% confidence.`;
+                    }
+                    
+                    // Display probabilities as progress bars
+                    probabilities.innerHTML = '';
+                    for (const [className, prob] of Object.entries(data.probabilities)) {
+                        const percentage = (prob * 100).toFixed(2);
+                        const color = className === data.class ? 'bg-danger' : 'bg-primary';
+                        
+                        probabilities.innerHTML += `
+                            <div class="mb-1">${className}</div>
+                            <div class="progress">
+                                <div class="progress-bar ${color}" role="progressbar" 
+                                     style="width: ${percentage}%" 
+                                     aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                                    ${percentage}%
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Display visualization
+                    if (data.visualization) {
+                        visualization.src = `data:image/png;base64,${data.visualization}`;
+                        visualizationCard.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    loader.style.display = 'none';
+                    console.error('Error:', error);
+                    resultAlert.className = 'alert alert-danger';
+                    resultAlert.textContent = 'An error occurred during processing. Please try again.';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
